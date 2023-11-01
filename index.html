@@ -1,104 +1,134 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Assincronismo</title>
 </head>
+
 <body>
-  <p id="livro"></p>
+  <form>
+    <label for="nome_produto">Nome do produto: <input type="text" id="nome_produto"></label>
+    <label for="preco">Preço do produto: <input type="number" id="preco"></label>
+    <label for="descricao">Descição do produto: <input type="text" id="descricao"></label>
+    <label for="categoria">Categoria do produto: <input type="text" id="categoria"></label>
+    <label for="imagem">Imagem do produto: <input type="url" id="imagem"></label>
+    <button type="submit">Enviar</button>
+  </form>
+  <div class="produtos"></div>
   <script>
-    function biblioteca(livro, alface, salada) {
-      alface(livro, salada);
-    }
+    const produtos = document.querySelector('div.produtos');
 
-    function renderiza(alguma_coisa, callback_normal) {
-      document.getElementById('livro').innerText = alguma_coisa;
-      callback_normal(alguma_coisa)
-    }
+    const formulario = document.querySelector('form');
+    formulario.addEventListener('submit', (e) => {
+      e.preventDefault();
 
-    function renderizaComFundoVermelho(argumento_preferido, maromba_academia) {
-      const elemento = document.getElementById('livro');
-      elemento.style.color = 'white'
-      elemento.style.backgroundColor ='red'
-      elemento.innerText = argumento_preferido
-      maromba_academia(argumento_preferido)
-    }
+      const preco = document.querySelector('input#preco').value;
+      const nome_produto = document.querySelector('input#nome_produto').value;
+      const descricao = document.querySelector('input#descricao').value;
+      const categoria = document.querySelector('input#categoria').value;
+      const imagem = document.querySelector('input#imagem').value;
 
-    biblioteca('Dicionário Oxford Escolar', function(primeiro, ultimo = function(outro_argumento) {
-      console.log(outro_argumento)
-    }) {
-      document.getElementById('livro').innerText = primeiro;
-      ultimo(primeiro)
-    });
+      const corpo = {
+          title: nome_produto,
+          price: preco,
+          description: descricao,
+          category: categoria,
+          image: imagem
+        };
 
-
-
-
-    // const minhaPromessa = new Promise(function(resolve, reject){
-    //   if (false) {
-    //     alert('deu certo')
-    //     resolve('deu bom');
-    //   } else {
-    //     alert('deu merda')
-    //     reject('deu ruim aqui')
-    //   }
-    // })
-
-    function promessa(parametro_config, tempo) {
-      return new Promise(function(resolve, reject){
-      if (parametro_config && tempo <= 2000) {
-        console.log('entrou no if')
-        setTimeout(() => resolve('configuração resolvida'), tempo)
-      } else {
-        alert('deu merda')
-        reject('deu ruim aqui')
-      }
-    });
-    }
-
-    const promessa2 = function() {
-      return new Promise(function(resolve, reject){
-      if (false) {
-        alert('deu certo')
-        resolve('deu bom');
-      } else {
-        alert('deu merda')
-        reject('deu ruim aqui')
-      }
-    })
-    }
-
-    promessa(true, 1500)
-      .then(response => console.log(response))
-      .catch(error => console.log(error));
-
-    const xhr = new XMLHttpRequest();
-    xhr.open('GET', 'https://api.guthib.com/users/carvalholeo');
-    xhr.addEventListener('readystatechange', (ev) => {
-      if (xhr.status === 200) {
-        console.log(JSON.parse(xhr.responseText));
-      }
-    });
-    xhr.addEventListener('error', () => {
-      alert('problema ao consultar api')
-    })
-    // xhr.send();
-
-    fetch('https://viacep.com.br/ws/29050660/json')
-      .then(response => {
-        return response.json()
+      fetch('https://fakestoreapi.com/products', {
+        method: 'POST',
+        body: JSON.stringify(corpo)
       })
-      .then(console.log)
-      .catch(console.trace)
+      .then(response => response.json())
+      .then(json => {
+        corpo.id = json.id;
+
+        const criacao = criaElementoNaTela(corpo);
+
+        produtos.appendChild(criacao);
+      })
+    })
+
+    fetch('https://fakestoreapi.com/products')
+      .then(res => res.json())
+      .then(json => {
+        json.forEach(produto => {
+          const criar = criaElementoNaTela(produto);
+
+          produtos.appendChild(criar);
+        });
+      })
 
 
 
+    function criaElementoNaTela(produto) {
+      const containerPai = document.createElement('div');
+      const titulo = document.createElement('h2');
+      const preco = document.createElement('span');
+      const descricao = document.createElement('p');
+      const categoria = document.createElement('span');
+      const imagem = document.createElement('img');
+      const formCompra = document.createElement('form');
+      const inputEscondido = document.createElement('input');
+      const botaoComprar = document.createElement('button');
+      const botaoExcluir = document.createElement('button');
 
+      titulo.innerText = produto.title
+      preco.innerText = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(produto.price);
+      descricao.innerText = produto.description;
+      categoria.innerText = produto.category;
+      imagem.src = produto.image;
+      imagem.style.display = 'block'
+      categoria.style.display = 'block'
+      imagem.style.display = 'block';
+      imagem.width = '70'
 
+      formCompra.action = '/detalhe-produto.html';
+      formCompra.method = 'GET';
+      inputEscondido.type = 'hidden';
+      inputEscondido.name = 'id_produto'
+      inputEscondido.value = produto.id;
+      botaoComprar.innerText = 'COMPRE AGORA MESMO';
+      botaoComprar.type = 'submit'
 
+      botaoExcluir.innerText = 'EXCLUIR PRODUTO'
+      botaoExcluir.value = produto.id;
 
+      botaoExcluir.addEventListener('click', e => {
+        e.preventDefault();
+        const id_produto = e.target.value;
+
+        const confirma = confirm('Tem certeza que deseja excluir o produto atual?');
+
+        if (confirma) {
+          fetch(`https://fakestoreapi.com/products/${id_produto}`, {
+            method: 'DELETE'
+          })
+            .then(res => res.json())
+            .then(json => {
+              document.getElementById(`produto-${id_produto}`).remove();
+              alert('Que pena, produto foi excluído');
+            })
+        }
+      })
+
+      formCompra.append(inputEscondido, botaoComprar);
+
+      containerPai.id = `produto-${produto.id}`;
+
+      containerPai.append(titulo, descricao, preco, categoria, imagem, formCompra, botaoExcluir);
+
+      containerPai.style.border = 'solid black 1px';
+      containerPai.style.margin = '10px';
+      containerPai.style.padding = '10px';
+
+      return containerPai;
+    }
 
   </script>
 </body>
+
 </html>
