@@ -13,7 +13,7 @@
     const produtos = document.querySelector('div.detalhe');
 
     const urlParams = new URLSearchParams(window.location.search);
-    // const idProduto = Number(urlParams.get('id_produto'));
+
     const idProduto = +urlParams.get('id_produto');
 
     if (idProduto > 0) {
@@ -26,7 +26,7 @@
           const descricao = document.createElement('p');
           const categoria = document.createElement('span');
           const imagem = document.createElement('img');
-  
+
           titulo.innerText = produto.title
           preco.innerText = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(produto.price);
           descricao.innerText = produto.description;
@@ -36,13 +36,13 @@
           categoria.style.display = 'block'
           imagem.style.display = 'block';
           imagem.width = '70'
-  
+
           containerPai.append(titulo, descricao, preco, categoria, imagem);
-  
+
           containerPai.style.border = 'solid black 1px';
           containerPai.style.margin = '10px';
           containerPai.style.padding = '10px'
-  
+
           produtos.appendChild(containerPai);
         })
         .catch(error => {

@@ -14,6 +14,8 @@
     <label for="descricao">Descição do produto: <input type="text" id="descricao"></label>
     <label for="categoria">Categoria do produto: <input type="text" id="categoria"></label>
     <label for="imagem">Imagem do produto: <input type="url" id="imagem"></label>
+    <input type="hidden" id="eh_criacao" value="true">
+    <input type="hidden" id="id_produto">
     <button type="submit">Enviar</button>
   </form>
   <div class="produtos"></div>
@@ -29,6 +31,8 @@
       const descricao = document.querySelector('input#descricao').value;
       const categoria = document.querySelector('input#categoria').value;
       const imagem = document.querySelector('input#imagem').value;
+      const ehCriacao = document.querySelector('input#eh_criacao').value;
+      const idProduto = document.querySelector('#id_produto').value;
 
       const corpo = {
           title: nome_produto,
@@ -38,17 +42,28 @@
           image: imagem
         };
 
-      fetch('https://fakestoreapi.com/products', {
-        method: 'POST',
+      const metodo = ehCriacao === 'true' ? 'POST' : 'PATCH';
+
+
+      fetch(`https://fakestoreapi.com/products/${idProduto}`, {
+        method: metodo,
         body: JSON.stringify(corpo)
       })
       .then(response => response.json())
       .then(json => {
         corpo.id = json.id;
 
-        const criacao = criaElementoNaTela(corpo);
+        if (ehCriacao === 'true') {
+          const criacao = criaElementoNaTela(corpo);
+          produtos.appendChild(criacao);
+          formulario.reset();
+          location.href = `#produto-${corpo.id}`;
+          return;
+        }
 
-        produtos.appendChild(criacao);
+        const idProduto = corpo.id;
+        atualizaNaTela(idProduto, corpo);
+        location.href = `#produto-${corpo.id}`;
       })
     })
 
@@ -75,6 +90,7 @@
       const inputEscondido = document.createElement('input');
       const botaoComprar = document.createElement('button');
       const botaoExcluir = document.createElement('button');
+      const botaoAtualizar = document.createElement('button');
 
       titulo.innerText = produto.title
       preco.innerText = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(produto.price);
@@ -85,6 +101,8 @@
       categoria.style.display = 'block'
       imagem.style.display = 'block';
       imagem.width = '70'
+      categoria.classList.add('categoria');
+      preco.classList.add('preco');
 
       formCompra.action = '/detalhe-produto.html';
       formCompra.method = 'GET';
@@ -114,12 +132,36 @@
             })
         }
       })
-
       formCompra.append(inputEscondido, botaoComprar);
+
+      botaoAtualizar.innerText = "ATUALIZAR PRODUTO"
+
+      botaoAtualizar.addEventListener('click', function(event) {
+        event.preventDefault();
+
+        const id_produto = document.querySelector('#id_produto');
+        const nome = document.querySelector('#nome_produto');
+        const preco = document.querySelector('#preco');
+        const descricao = document.querySelector('#descricao');
+        const categoria = document.querySelector('#categoria');
+        const imagem = document.querySelector("#imagem");
+        const ehCriacao = document.querySelector('#eh_criacao');
+
+
+        nome.value = produto.title;
+        preco.value = produto.price;
+        descricao.value = produto.description;
+        categoria.value = produto.category;
+        imagem.value = produto.image;
+        id_produto.value = produto.id;
+        ehCriacao.value = 'false';
+
+        location.href = '#'
+      });
 
       containerPai.id = `produto-${produto.id}`;
 
-      containerPai.append(titulo, descricao, preco, categoria, imagem, formCompra, botaoExcluir);
+      containerPai.append(titulo, descricao, preco, categoria, imagem, formCompra, botaoExcluir, botaoAtualizar);
 
       containerPai.style.border = 'solid black 1px';
       containerPai.style.margin = '10px';
@@ -128,6 +170,28 @@
       return containerPai;
     }
 
+    function atualizaNaTela(id, produto) {
+      const selecionaElemento = document.querySelector(`#produto-${id}`);
+
+      const title = selecionaElemento.querySelector('h2');
+      const image = selecionaElemento.querySelector('img');
+      const description = selecionaElemento.querySelector('p');
+      const price = selecionaElemento.querySelector('span.preco');
+      const category = selecionaElemento.querySelector('span.categoria');
+      const ehCriacao = document.querySelector('#eh_criacao');
+      const idProduto = document.querySelector('form input#id_produto');
+
+      title.innerText = produto.title;
+      image.src = produto.image;
+      description.innerText = produto.description;
+      price.innerText = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(produto.price);
+      category.innerText = produto.category;
+
+      formulario.reset()
+      ehCriacao.value = 'true';
+
+      idProduto.value = '';
+    }
   </script>
 </body>
 
